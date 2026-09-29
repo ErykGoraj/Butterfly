@@ -1,0 +1,7 @@
+{
+  "name": "butterfly-education",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": { "build": "node scripts/build.mjs", "start": "node scripts/serve.mjs", "test": "node --test tests/build.test.mjs" }
+}

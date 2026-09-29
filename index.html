@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="Butterfly KOL — Twoja przestrzeń do nauki i odkrywania.">
+  <title>Butterfly KOL</title>
+  <script src="theme.js"></script>
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="script.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Przejdź do treści</a>
+  <header class="header">
+    <a class="brand" href="#"><span class="logo" aria-hidden="true">ʚɞ</span><span>Butterfly <b>KOL</b></span></a>
+    <div class="header-actions">
+      <label class="search-box"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Szukaj w notatkach…" aria-label="Szukaj w tytułach, folderach i treści" autocomplete="off"><kbd>/</kbd></label>
+      <button id="themeButton" class="icon-button" aria-label="Kolory i motyw" title="Kolory i motyw" aria-haspopup="dialog">◐</button>
+      <button id="menuButton" class="icon-button menu-button" aria-controls="sidebar" aria-expanded="false" aria-label="Otwórz nawigację">☰</button>
+    </div>
+  </header>
+  <button id="overlay" class="overlay" aria-label="Zamknij nawigację" hidden></button>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar" aria-label="Biblioteka notatek">
+      <p class="section-title">TWOJA PRZESTRZEŃ</p>
+      <a class="nav-item home-link" href="#">⌂ <span>Wszystkie notatki</span><span id="noteCount" class="badge">0</span></a>
+      <div class="sidebar-heading"><p class="section-title">BIBLIOTEKA</p><button id="refreshButton" class="text-button" title="Ponownie pobierz listę notatek" aria-label="Odśwież listę notatek">↻</button></div>
+      <nav id="tree" aria-label="Kategorie i notatki"></nav>
+      <p class="sidebar-footer"><strong>Butterfly KOL</strong><br>knowledge open lifes <span aria-hidden="true">✦</span></p>
+    </aside>
+    <main id="main" tabindex="-1">
+      <nav id="breadcrumb" class="breadcrumb" aria-label="Ścieżka nawigacji"></nav>
+      <p id="status" class="status" role="status" aria-live="polite">Wczytywanie biblioteki…</p>
+      <section id="view"></section>
+    </main>
+    <aside class="toc" aria-label="Spis treści"><details id="tocDetails" open><summary>NA TEJ STRONIE</summary><nav id="toc"></nav></details><div class="toc-footer">BUTTERFLY KOL<br><span>knowledge open lifes</span></div></aside>
+  </div>
+  <noscript>Włącz JavaScript, aby przeglądać notatki.</noscript>
+  <dialog id="appearanceDialog" aria-labelledby="appearanceTitle">
+    <div class="appearance-heading"><div><p class="eyebrow">TWOJA PRZESTRZEŃ, TWÓJ STYL</p><h2 id="appearanceTitle">Poczuj się u siebie.</h2></div><button id="closeAppearance" class="icon-button" aria-label="Zamknij ustawienia wyglądu">×</button></div>
+    <p class="appearance-intro">Wybierz kolory pasujące do Twojego nastroju. Opisy są inspiracją — wybierz to, w czym najlepiej Ci się czyta.</p>
+    <fieldset class="mode-options"><legend>Jasność</legend><label><input type="radio" name="mode" value="light"> ☀ Jasny</label><label><input type="radio" name="mode" value="dark"> ☾ Ciemny</label><label><input type="radio" name="mode" value="system"> ◐ Systemowy</label></fieldset>
+    <fieldset class="palette-options"><legend>Kolor przewodni</legend><div id="paletteChoices" class="palette-grid"></div></fieldset>
+    <p class="appearance-saved" role="status">Twój wybór zapisuje się automatycznie w tej przeglądarce.</p>
+  </dialog>
+</body>
+</html>

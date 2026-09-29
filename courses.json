@@ -1,0 +1,74 @@
+{
+  "courses": [
+    {
+      "id": "pamiec-x86",
+      "title": "Pamięć programu od podstaw",
+      "description": "Krótki kurs przykładowy: poznaj układ pamięci programu w Linuxie, a następnie zrozum rolę stosu.",
+      "level": "Podstawowy",
+      "requirements": "Podstawowa znajomość programowania. Do ćwiczeń z readelf przyda się Linux.",
+      "modules": [
+        {
+          "title": "Organizacja pamięci",
+          "lessons": [
+            "Informatyka/Assembly x86-64/01-pamiec.md"
+          ],
+          "quiz": [
+            {
+              "question": "Gdzie umieścisz zmienną z początkową wartością 123?",
+              "options": [
+                "W sekcji .data",
+                "W sekcji .text",
+                "W rejestrze rip"
+              ],
+              "answer": 1,
+              "explanation": "Sekcja .data przechowuje zainicjalizowane dane. Sekcja .text służy do przechowywania instrukcji."
+            },
+            {
+              "question": "Które narzędzie pozwala sprawdzić nagłówek ELF?",
+              "options": [
+                "mkdir",
+                "readelf",
+                "pwd"
+              ],
+              "answer": 2,
+              "explanation": "readelf --file-header wyświetla nagłówek pliku ELF. mkdir tworzy katalog, a pwd pokazuje bieżącą ścieżkę."
+            }
+          ]
+        },
+        {
+          "title": "Stos w praktyce",
+          "lessons": [
+            "Informatyka/Assembly x86-64/02-stos.md"
+          ],
+          "quiz": [
+            {
+              "question": "Na stos włożono kolejno 10, a potem 20. Co zostanie zdjęte jako pierwsze?",
+              "options": [
+                "10",
+                "20"
+              ],
+              "answer": 2,
+              "explanation": "Stos działa według LIFO: ostatni element włożony jest zdejmowany jako pierwszy."
+            },
+            {
+              "question": "Który rejestr wskazuje szczyt stosu w x86-64?",
+              "options": [
+                "rax",
+                "rip",
+                "rsp"
+              ],
+              "answer": 3,
+              "explanation": "rsp jest wskaźnikiem stosu. rip wskazuje instrukcję, a rax jest rejestrem ogólnego przeznaczenia."
+            }
+          ]
+        }
+      ],
+      "outcomes": [
+        "Rozróżnisz sekcje .text, .data i .bss.",
+        "Wyjaśnisz zasadę LIFO oraz rolę rejestru rsp.",
+        "Odczytasz podstawowe informacje o pliku ELF."
+      ],
+      "project": "Przygotuj tabelę: obszar pamięci → przeznaczenie → przykład. Prześledź dwie operacje push i dwie pop, zapisując kolejność wartości."
+    }
+  ]
+}

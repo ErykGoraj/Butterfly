@@ -48,3 +48,25 @@ readelf --symbols ./memory
 ```
 
 Następny krok: [poznaj stos](02-stos.md). Możesz też wrócić do [układu pamięci](#układ-pamięci-programu).
+
+## Ćwiczenie: wybierz sekcję
+
+Masz dwie zmienne: `licznik` z wartością początkową 7 oraz bufor na 256 bajtów inicjalizowany zerami. Do jakich sekcji je przypiszesz?
+
+<details>
+<summary>Pokaż rozwiązanie</summary>
+
+- `licznik` z wartością 7 → `.data`.
+- Bufor inicjalizowany zerami → `.bss`.
+
+```assembly
+section .data
+    licznik dq 7
+
+section .bss
+    bufor resb 256
+```
+
+`.bss` pozwala opisać potrzebny rozmiar bez zapisywania tych wszystkich zer w pliku wykonywalnym.
+
+</details>

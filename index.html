@@ -25,6 +25,8 @@
     <aside id="sidebar" class="sidebar" aria-label="Biblioteka notatek">
       <p class="section-title">TWOJA PRZESTRZEŃ</p>
       <a class="nav-item home-link" href="#">⌂ <span>Wszystkie notatki</span><span id="noteCount" class="badge">0</span></a>
+      <a id="coursesLink" class="nav-item" href="#courses">▤ <span>Kursy</span><span id="courseCount" class="badge">0</span></a>
+      <a id="bookmarksLink" class="nav-item" href="#bookmarks">☆ <span>Zakładki</span></a>
       <div class="sidebar-heading"><p class="section-title">BIBLIOTEKA</p><button id="refreshButton" class="text-button" title="Ponownie pobierz listę notatek" aria-label="Odśwież listę notatek">↻</button></div>
       <nav id="tree" aria-label="Kategorie i notatki"></nav>
       <p class="sidebar-footer"><strong>Butterfly KOL</strong><br>knowledge open lifes <span aria-hidden="true">✦</span></p>
@@ -42,6 +44,7 @@
     <p class="appearance-intro">Wybierz kolory pasujące do Twojego nastroju. Opisy są inspiracją — wybierz to, w czym najlepiej Ci się czyta.</p>
     <fieldset class="mode-options"><legend>Jasność</legend><label><input type="radio" name="mode" value="light"> ☀ Jasny</label><label><input type="radio" name="mode" value="dark"> ☾ Ciemny</label><label><input type="radio" name="mode" value="system"> ◐ Systemowy</label></fieldset>
     <fieldset class="palette-options"><legend>Kolor przewodni</legend><div id="paletteChoices" class="palette-grid"></div></fieldset>
+    <fieldset class="reading-options"><legend>Wygodne czytanie</legend><label for="readingSize">Rozmiar tekstu lekcji</label><select id="readingSize"><option value="16">Mały · 16 px</option><option value="18">Standardowy · 18 px</option><option value="20">Duży · 20 px</option><option value="22">Bardzo duży · 22 px</option></select><label for="readingWidth">Szerokość tekstu</label><select id="readingWidth"><option value="narrow">Wąska</option><option value="comfortable">Standardowa</option><option value="wide">Szeroka</option></select></fieldset>
     <p class="appearance-saved" role="status">Twój wybór zapisuje się automatycznie w tej przeglądarce.</p>
   </dialog>
 </body>

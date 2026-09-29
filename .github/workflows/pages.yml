@@ -22,7 +22,7 @@ jobs:
         with:
           node-version: '22'
       - name: Test generator
-        run: node --test tests/build.test.mjs
+        run: node --test
       - name: Build current notes
         run: node scripts/build.mjs
       - uses: actions/configure-pages@v5

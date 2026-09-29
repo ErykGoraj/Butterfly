@@ -1,5 +1,7 @@
 import { marked } from './vendor/marked.esm.js';
 import DOMPurify from './vendor/purify.es.mjs';
+import { createCourses } from './courses.js';
+import { createBookmarks } from './learning.js';
 
 const $ = id => document.getElementById(id);
 const base = new URL('./', location.href);
@@ -11,6 +13,13 @@ const route = (path = '', heading = '', folder = '') => '#' + new URLSearchParam
 const current = () => new URLSearchParams(location.hash.slice(1));
 const link = (text, href, cls) => { const a = el('a', text, cls); a.href = href; return a; };
 const category = note => note.path.split('/').slice(0, -1).join(' / ') || 'Notatki';
+const courseUI = createCourses({el, link, view: $('view'), breadcrumb: $('breadcrumb'), toc: $('toc'), getNote: path => byPath.get(path), onChange: () => navigate({keepScroll:true})});
+const bookmarks = createBookmarks({el, link, view:$('view'), breadcrumb:$('breadcrumb'), toc:$('toc'), getNotes:()=>notes});
+const activeCourse = () => courseUI.get(current().get('course'));
+function lessonRoute(path, heading = '') {
+  const course = activeCourse();
+  return course && courseUI.lessons(course).includes(path) ? courseUI.url(course,path,heading) : route(path,heading);
+}
 function closeMenu(focus = false) {
   document.body.classList.remove('menu-open'); $('menuButton').setAttribute('aria-expanded', 'false'); $('overlay').hidden = true;
   if (focus) $('menuButton').focus();
@@ -60,6 +69,10 @@ $('closeAppearance').onclick=()=>$('appearanceDialog').close();
 $('appearanceDialog').addEventListener('click',event=>{if(event.target===$('appearanceDialog')){const r=event.target.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)event.target.close();}});
 $('appearanceDialog').addEventListener('close',()=>$('themeButton').focus());
 themeLabel();
+for(const name of ['readingSize','readingWidth']) {
+  const input=$(name); input.value=window.butterflyTheme.getReading()[name];
+  input.onchange=()=>window.butterflyTheme.setReading(name,input.value);
+}
 if (matchMedia('(max-width: 1150px)').matches) $('tocDetails').open = false;
 
 function renderTree() {
@@ -83,7 +96,11 @@ function renderTree() {
   }
   $('tree').replaceChildren(branch(root));
   document.querySelector('.home-link').toggleAttribute('data-active', !active);
-  document.querySelector('.home-link').setAttribute('aria-current',!active && !current().get('folder') ? 'page' : 'false');
+  const inCourses = current().has('course') || current().has('courses');
+  document.querySelector('.home-link').setAttribute('aria-current',!inCourses && !current().has('bookmarks') && !active && !current().get('folder') ? 'page' : 'false');
+  $('bookmarksLink').setAttribute('aria-current',current().has('bookmarks')?'page':'false');
+  $('coursesLink').setAttribute('aria-current',inCourses ? 'page' : 'false');
+  $('courseCount').textContent=courseUI.count();
   $('noteCount').textContent = notes.length;
 }
 function crumbs(parts = [], noteTitle = '') {
@@ -118,10 +135,10 @@ function wireLinks(article,note) {
   const fileURL=new URL(note.path.split('/').map(encodeURIComponent).join('/'),notesBase);
   for (const a of article.querySelectorAll('a[href]')) {
     const raw=a.getAttribute('href');
-    if(raw.startsWith('#')) {a.href=route(note.path,decode(raw.slice(1)));continue;}
+    if(raw.startsWith('#')) {a.href=lessonRoute(note.path,decode(raw.slice(1)));continue;}
     let target;try { target = raw.startsWith('/notes/') ? new URL(raw.slice(1),base) : new URL(raw,fileURL); } catch { a.removeAttribute('href');continue; }
     if(target.origin===notesBase.origin && target.pathname.startsWith(notesBase.pathname) && /\.md$/i.test(target.pathname)) {
-      const path=target.pathname.slice(notesBase.pathname.length).split('/').map(decode).join('/');a.href=route(path,decode(target.hash.slice(1)));
+      const path=target.pathname.slice(notesBase.pathname.length).split('/').map(decode).join('/');a.href=lessonRoute(path,decode(target.hash.slice(1)));
     } else {a.href=target.href;if(target.origin!==location.origin){a.rel='noopener noreferrer';}}
   }
   for(const img of article.querySelectorAll('img[src]')) {
@@ -133,6 +150,7 @@ function noteView(note) {
   crumbs(note.path.split('/').slice(0,-1),note.title);
   const article = el('article');
   const header=el('div'); header.append(el('div',`${category(note)} · ${note.minutes} MIN CZYTANIA`,'article-meta'),el('h1',note.title));
+  header.append(bookmarks.button(note));
   const body=el('div',undefined,'markdown');
   body.innerHTML = DOMPurify.sanitize(marked.parse(note.markdown,{gfm:true}), {USE_PROFILES:{html:true},FORBID_TAGS:['style','form','input','button','textarea','select'],FORBID_ATTR:['style','srcset','id','name','autofocus']});
   if(body.firstElementChild?.tagName==='H1')body.firstElementChild.remove();
@@ -141,7 +159,7 @@ function noteView(note) {
   for(const heading of headings) {
     const slug=heading.textContent.toLowerCase().trim().replace(/[^\p{L}\p{N}\s_-]/gu,'').replace(/\s+/g,'-')||'sekcja';
     let unique=slug,index=1;while(usedSlugs.has(unique))unique=slug+'-'+index++;usedSlugs.add(unique);heading.id='section-'+unique;heading.dataset.slug=unique;
-    const a=link(heading.textContent,route(note.path,heading.dataset.slug));a.style.paddingLeft=`${12+Math.max(0,Number(heading.tagName.slice(1))-2)*10}px`;$('toc').append(a);
+    const a=link(heading.textContent,lessonRoute(note.path,heading.dataset.slug));a.style.paddingLeft=`${12+Math.max(0,Number(heading.tagName.slice(1))-2)*10}px`;$('toc').append(a);
   }
   if(!headings.length)$('toc').append(el('p','Ta notatka nie ma podsekcji.','status'));
   for(const pre of body.querySelectorAll('pre')) {
@@ -152,25 +170,37 @@ function noteView(note) {
   }
   for(const table of body.querySelectorAll('table')) {const wrapper=el('div',undefined,'table-wrap');table.replaceWith(wrapper);wrapper.append(table);}
   wireLinks(body,note);article.append(header,body);
-  const nav=el('nav',undefined,'article-navigation');nav.ariaLabel='Sąsiednie notatki';const index=notes.indexOf(note);
-  for(const [item,label] of [[notes[index-1],'← Poprzednia'],[notes[index+1],'Następna →']]) {
-    if(item){const a=link('',route(item.path));a.append(el('span',label),el('strong',item.title));nav.append(a);}else nav.append(el('span'));
+  const course=activeCourse();
+  const sequence=course ? courseUI.lessons(course).map(path=>byPath.get(path)) : notes;
+  const nav=el('nav',undefined,'article-navigation');nav.ariaLabel=course?'Lekcje kursu':'Sąsiednie notatki';const index=sequence.indexOf(note);
+  for(const [item,label] of [[sequence[index-1],'← Poprzednia'],[sequence[index+1],'Następna →']]) {
+    if(item){const a=link('',lessonRoute(item.path));a.append(el('span',label),el('strong',item.title));nav.append(a);}else nav.append(el('span'));
   }
   $('view').replaceChildren(article,nav);$('status').textContent='';document.title=note.title+' · Butterfly KOL';
-  observer?.disconnect();observer=new IntersectionObserver(entries=>{const active=entries.find(e=>e.isIntersecting);if(active)for(const a of $('toc').querySelectorAll('a'))a.classList.toggle('active',a.hash===route(note.path,active.target.dataset.slug));},{rootMargin:'-15% 0px -65% 0px'});headings.forEach(h=>observer.observe(h));
+  if(course)courseUI.decorate(course,note);
+  observer?.disconnect();observer=new IntersectionObserver(entries=>{const active=entries.find(e=>e.isIntersecting);if(active)for(const a of $('toc').querySelectorAll('a'))a.classList.toggle('active',a.hash===lessonRoute(note.path,active.target.dataset.slug));},{rootMargin:'-15% 0px -65% 0px'});headings.forEach(h=>observer.observe(h));
 }
 function navigate({keepScroll=false}={}) {
   closeMenu();renderTree();
   const params=current(),path=params.get('note'),folder=params.get('folder')||'',query=params.get('q')||'';
   $('search').value=query;
+  $('status').textContent='';
+  const course=activeCourse();
   if(query)catalog(query);
+  else if(params.has('bookmarks')) {observer?.disconnect();bookmarks.list();}
+  else if(params.has('courses')) {observer?.disconnect();courseUI.list();}
+  else if(params.has('course') && (!course || (path && !courseUI.lessons(course).includes(path)))) {
+    observer?.disconnect();$('toc').replaceChildren();$('breadcrumb').replaceChildren(link('Kursy','#courses'));
+    $('view').replaceChildren(el('h1','Nie znaleziono kursu lub lekcji'),el('p','Program kursu mógł się zmienić. Sprawdź aktualną listę kursów.','description'),link('Przejdź do kursów','#courses','retry'));document.title='Nie znaleziono · Butterfly KOL';
+  }
+  else if(course && !path) {observer?.disconnect();courseUI.overview(course);}
   else if(path) {
     const note=byPath.get(path);
     if(!note) {observer?.disconnect();crumbs();$('toc').replaceChildren();$('status').textContent='';$('view').replaceChildren(el('h1','Nie znaleziono notatki'),el('p','Plik został usunięty, przeniesiony albo nie występuje w aktualnej bibliotece.','description'),link('Wróć do biblioteki','#','retry'));document.title='Nie znaleziono · Butterfly KOL';}
     else noteView(note);
   } else catalog('',folder);
   const heading=params.get('heading');
-  if(heading){const target=[...$('view').querySelectorAll('[data-slug]')].find(h=>h.dataset.slug===heading);target?.scrollIntoView();}
+  if(heading){const target=[...$('view').querySelectorAll('[data-slug]')].find(h=>h.dataset.slug===heading);if(target){let parent=target.parentElement;while(parent){if(parent.tagName==='DETAILS')parent.open=true;parent=parent.parentElement;}target.scrollIntoView();}}
   else if(!keepScroll)window.scrollTo({top:0,behavior:'instant'});
 }
 let searchTimer;
@@ -184,7 +214,7 @@ async function load() {
     const data=await response.json();if(data.version!==1 || !Array.isArray(data.notes))throw Error('Nieprawidłowy format manifestu');
     const paths=new Set();
     for(const n of data.notes){if(!n || !['path','title','markdown','text','excerpt'].every(k=>typeof n[k]==='string') || !/\.md$/i.test(n.path) || n.path.split('/').some(p=>!p || p==='.' || p==='..') || paths.has(n.path))throw Error('Nieprawidłowa pozycja manifestu');paths.add(n.path);}
-    if(version!==loadVersion)return;notes=data.notes;byPath=new Map(notes.map(n=>[n.path,n]));navigate({keepScroll:true});
+    if(version!==loadVersion)return;notes=data.notes;byPath=new Map(notes.map(n=>[n.path,n]));courseUI.set(Array.isArray(data.courses)?data.courses:[]);navigate({keepScroll:true});
   }catch(error){$('status').textContent='Nie udało się wczytać biblioteki.';const message=location.protocol==='file:'?'Uruchom stronę przez serwer HTTP zgodnie z README.':'Sprawdź połączenie i czy wygenerowano notes-manifest.json.';const retry=el('button','Spróbuj ponownie','retry');retry.onclick=load;$('view').replaceChildren(el('h1','Biblioteka jest niedostępna'),el('p',message,'description'),retry);console.error(error);}
   finally{if(version===loadVersion)$('refreshButton').disabled=false;}
 }

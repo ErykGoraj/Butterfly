@@ -2,6 +2,7 @@ import { readdir, readFile, mkdir, writeFile, rm, cp, lstat } from 'node:fs/prom
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { marked } from '../vendor/marked.esm.js';
+import { generateCourses } from './courses.mjs';
 
 export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const plain = text => text.replace(/<[^>]*>/g,' ').replace(/!?\[([^\]]*)\]\([^)]*\)/g,'$1').replace(/[`*_~>#|]/g,'').replace(/\s+/g,' ').trim();
@@ -29,11 +30,12 @@ export async function generateManifest(directory) {
 }
 export async function build(projectRoot=root) {
   const manifest=await generateManifest(path.join(projectRoot,'notes'));
+  manifest.courses=await generateCourses(path.join(projectRoot,'courses.json'),manifest.notes);
   await writeFile(path.join(projectRoot,'notes-manifest.json'),JSON.stringify(manifest,null,2)+'\n');
   const out=path.join(projectRoot,'dist');
   // Fixed output directory under the explicitly supplied project root.
   await rm(out,{recursive:true,force:true});await mkdir(out,{recursive:true});
-  for(const name of ['index.html','styles.css','script.js','theme.js','vendor','notes-manifest.json'])await cp(path.join(projectRoot,name),path.join(out,name),{recursive:true});
+  for(const name of ['index.html','styles.css','script.js','theme.js','courses.js','quiz.js','learning.js','vendor','notes-manifest.json'])await cp(path.join(projectRoot,name),path.join(out,name),{recursive:true});
   try{await cp(path.join(projectRoot,'notes'),path.join(out,'notes'),{recursive:true,filter:async src=>!(await lstat(src)).isSymbolicLink()});}catch(error){if(error.code!=='ENOENT')throw error;}
   await writeFile(path.join(out,'.nojekyll'),'');
   console.log(`Gotowe: ${manifest.notes.length} notatek → dist/`);

@@ -2,6 +2,7 @@ import { marked } from './vendor/marked.esm.js';
 import DOMPurify from './vendor/purify.es.mjs';
 import { createCourses } from './courses.js';
 import { createBookmarks } from './learning.js';
+import renderMathInElement from './vendor/katex/contrib/auto-render.mjs';
 
 const $ = id => document.getElementById(id);
 const base = new URL('./', location.href);
@@ -169,7 +170,19 @@ function noteView(note) {
     button.onclick=async()=>{try{await navigator.clipboard.writeText(code.textContent);button.textContent='Skopiowano';}catch{button.textContent='Zaznacz i skopiuj';}setTimeout(()=>button.textContent='Kopiuj',2200);};
   }
   for(const table of body.querySelectorAll('table')) {const wrapper=el('div',undefined,'table-wrap');table.replaceWith(wrapper);wrapper.append(table);}
-  wireLinks(body,note);article.append(header,body);
+  wireLinks(body,note);
+  renderMathInElement(body, {
+    delimiters: [
+      {left:'$$',right:'$$',display:true},
+      {left:'\\[',right:'\\]',display:true},
+      {left:'\\(',right:'\\)',display:false},
+      {left:'$',right:'$',display:false}
+    ],
+    throwOnError: false,
+    strict: 'warn',
+    trust: false
+  });
+  article.append(header,body);
   const course=activeCourse();
   const sequence=course ? courseUI.lessons(course).map(path=>byPath.get(path)) : notes;
   const nav=el('nav',undefined,'article-navigation');nav.ariaLabel=course?'Lekcje kursu':'Sąsiednie notatki';const index=sequence.indexOf(note);
